@@ -1,10 +1,22 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { Auth } from '@aws-amplify/auth';
 
-const UserContext = createContext(null);
+interface UserContextProps {
+  user: any | null;
+  login: (usernameOrEmail: string, password: string) => Promise<any>;
+  logout: () => Promise<any>;
+}
 
-export const UserProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+export const userContextDefaultValue: UserContextProps = {
+  user: null,
+  login: () => Promise.resolve(null),
+  logout: () => Promise.resolve(null),
+};
+
+export const UserContext = createContext<UserContextProps>(userContextDefaultValue);
+
+export const UserProvider = ({ children } : { children: React.ReactNode }) => {
+  const [user, setUser] = useState<any | null>(null);
   
   useEffect(() => {
     Auth.currentAuthenticatedUser()
@@ -18,7 +30,7 @@ export const UserProvider = ({ children }) => {
       });      
   },[]);
 
-  const login = (usernameOrEmail, password) => {
+  const login = async (usernameOrEmail: string, password: string) => {
     Auth.signIn(usernameOrEmail, password)
     .then(cognitoUser => {
       setUser(cognitoUser);
@@ -34,7 +46,7 @@ export const UserProvider = ({ children }) => {
     })
   }
 
-  const logout = () => {
+  const logout = async () => {
     console.log("logout called");
     Auth.signOut().then((data) => {
       console.log("logout data: ",data);
